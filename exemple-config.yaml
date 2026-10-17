@@ -1,0 +1,88 @@
+# Pixar Board — exemple de configuration de tableau de bord
+# Tableau de bord ▸ ⋮ ▸ Modifier ▸ ⋮ ▸ Éditeur de configuration brute, puis remplacer tout le contenu par :
+views:
+  - title: Accueil
+    path: accueil
+    strategy:
+      type: custom:pixar-board
+
+      # --- illustrations (dans /config/www/pixar-board/, servies sous /local/pixar-board/) ---
+      sprite: /local/pixar-board/planche-principale.png        # obligatoire
+      night_sprite: /local/pixar-board/planche-nuit.png        # optionnel : lune, nuages, pluie et maison de nuit
+      variants_sprite: /local/pixar-board/planche-variantes.png  # optionnel : télé en veille, neige, orage…
+
+      # --- la famille (carte du haut) ---
+      famille:
+        photo: /local/pixar-board/famille-jour.png             # optionnel : grande photo « Où est la famille ? »
+        photo_night: /local/pixar-board/famille-nuit.png       # optionnel : version du soir
+        zones:                                                 # nom de zone HA : [emoji, libellé affiché]
+          Travail: ["💼", "Travail"]
+          École: ["🏫", "École"]
+        people:
+          - name: Alex
+            entity: person.alex
+            battery: sensor.iphone_alex_battery_level          # optionnel
+            color: "#FFB74D"
+            image: /local/pixar-board/alex-jour.png            # PNG carré, fond transparent
+            night_image: /local/pixar-board/alex-nuit.png      # optionnel : version pyjama
+          - name: Sam
+            entity: person.sam
+            battery: sensor.iphone_sam_battery_level
+            color: "#F48FB1"
+            image: /local/pixar-board/sam-jour.png
+            night_image: /local/pixar-board/sam-nuit.png
+          - name: Léo
+            entity: person.leo
+            color: "#64B5F6"
+            image: /local/pixar-board/leo-jour.png
+            no_tracker: Pas de suivi                           # pour quelqu'un sans téléphone suivi
+
+      # --- vos entités (tout ce qui n'est pas indiqué garde sa valeur par défaut, voir README) ---
+      entities:
+        weather: weather.home
+        outdoor_temp: sensor.outdoor_temperature
+        door_lock: lock.front_door
+        door_contact: binary_sensor.front_door_contact          # "" si vous n'avez pas de capteur d'ouverture
+        garage: cover.garage_door
+        shutters: [cover.living_room_shutter, cover.bedroom_shutter]
+        smoke: [binary_sensor.smoke_detector]
+        indoor_temp: sensor.living_room_temperature
+        indoor_humidity: sensor.living_room_humidity
+        co2: sensor.living_room_co2
+        bedrooms: [sensor.bedroom_temperature, sensor.kids_room_temperature]
+        grid_power: sensor.grid_power                           # en W, négatif = surplus envoyé au réseau
+        solar_power: sensor.solar_power                         # en kW
+        house_power: sensor.house_power                         # en kW
+        grid_energy_today: sensor.grid_energy_today             # en kWh
+        car:
+          name: Voiture
+          battery: sensor.car_battery                           # battery: "" pour masquer la voiture
+          charging: binary_sensor.car_charging
+          plugged: binary_sensor.car_plugged
+        fridges:
+          - { entity: sensor.fridge_temperature, name: Frigo, warn: 5, bad: 6, ge: true, warn_delay: 10, bad_delay: 20 }
+          - { entity: sensor.freezer_temperature, name: Congélateur, warn: -18, bad: -15, warn_delay: 15, bad_delay: 30 }
+        hurry_button: input_button.hurry_up
+        bins: { weekday: 1, yellow_reference: "2026-01-05", yellow_every_weeks: 2 }
+        tv: media_player.living_room_tv
+        speakers:
+          - { entity: media_player.soundbar, name: Barre son }
+
+      # --- ce que fait chaque appui (actions Home Assistant classiques) ---
+      actions:
+        atable:
+          action: perform-action
+          perform_action: script.annonce_a_table
+        depeche:
+          action: perform-action
+          perform_action: input_button.press
+          target: { entity_id: input_button.hurry_up }
+        porte:
+          action: perform-action
+          perform_action: lock.lock
+          target: { entity_id: lock.front_door }
+          confirmation:
+            text: "Verrouiller la porte ?"
+        energie:
+          action: navigate
+          navigation_path: /energy
